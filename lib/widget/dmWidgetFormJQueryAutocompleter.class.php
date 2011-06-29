@@ -13,8 +13,11 @@ class dmWidgetFormJQueryAutocompleter extends sfWidgetFormJQueryAutocompleter
 	{
 		$this->addOption('dispatcher');
 		$this->addOption('response');
+		$this->addOption('request');
 
 		parent::configure($options, $attributes);
+		
+		$this->addOption('config', array('do_not_autocomplete' => true));
 	}
 
 
@@ -28,30 +31,52 @@ class dmWidgetFormJQueryAutocompleter extends sfWidgetFormJQueryAutocompleter
 			$this->value = $value;
 			$this->attributes = $attributes;
 			$this->errors = $errors;
-			
+
 			$dispatcher = $this->getOption('dispatcher');
 			if(!$dispatcher)
 			{
-				$dispatcher = dmContext::getInstance()->getEventDispatcher(); 
+				$dispatcher = dmContext::getInstance()->getEventDispatcher();
 			}
 			$dispatcher->connect('layout.filter_config', array($this, 'listenToLayoutFilterConfigEvent'));
 		}
 
-		
-		$response = $this->getOption('response');
-		if(!$response) $response = dmContext::getInstance()->getResponse();
-		$response->addJavascript('/sfFormExtraPlugin/js/jquery.autocompleter.js');
-		$response->addJavascript('/dmFormExtraPlugin/js/dmFormAutocomplete.js');
-		
-		$response->addStylesheet('/sfFormExtraPlugin/css/jquery.autocompleter.css');
-		
-		return 
+
+		$request = $this->getOption('request');
+		if(!$request) $request = dmContext::getInstance()->getRequest();
+		$ajax = $request->isXmlHttpRequest();
+
+		if($ajax)
+		{
+			$config =  '<script type="text/javascript"> dm_configuration = $.extend(dm_configuration, ' . json_encode($this->getJavascriptConfig()) . ');</script>';
+		}
+
+		return
 		$this->renderTag('input', array('type' => 'hidden', 'name' => $name, 'value' => $value))
 		.
 		$this->renderTag('input', array_merge(array('type' => $this->getOption('type'), 'name' => 'autocomplete_' . $name, 'value' => $visibleValue), $attributes))
-		
+		.
+		($ajax ? $config : '')
+
 		;
-		
+
+	}
+
+	public function getJavaScripts()
+	{
+		return array(
+			'/sfFormExtraPlugin/js/jquery.autocompleter.js', 
+			'/dmFormExtraPlugin/js/dmFormAutocomplete.js'
+		);
+	}
+
+	public function getStylesheets()
+	{
+		return array('/sfFormExtraPlugin/css/jquery.autocompleter.css');
+	}
+
+	public function getJavascriptConfig()
+	{
+		return $this->listenToLayoutFilterConfigEvent(null, array());
 	}
 
 
@@ -66,7 +91,7 @@ class dmWidgetFormJQueryAutocompleter extends sfWidgetFormJQueryAutocompleter
 			'id' => $this->generateId('autocomplete_'.$this->name),
 			'url' => $this->getOption('url'),
 			'config' => $this->getOption('config'),
-			'input' => $this->generateId($this->name)
+			'input' => $this->generateId($this->name),
 		);
 
 		return $value;
