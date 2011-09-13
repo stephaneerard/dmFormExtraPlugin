@@ -71,7 +71,7 @@ class dmWidgetFormJQueryAutocompleter extends sfWidgetFormJQueryAutocompleter
 
 	public function getStylesheets()
 	{
-		return array('/sfFormExtraPlugin/css/jquery.autocompleter.css');
+		return array('/sfFormExtraPlugin/css/jquery.autocompleter.css' => 'all');
 	}
 
 	public function getJavascriptConfig()

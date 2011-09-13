@@ -27,7 +27,6 @@
 		      }
 		    }, v.config))
 		    .result(function(event, data) {
-		    	console.log(data);
 		    	if(v.config.result && $.isFunction(v.config.result)){
 		    		v.config.result(event, data, form_input);
 		    	}else{
